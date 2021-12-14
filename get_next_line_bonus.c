@@ -10,11 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <stdlib.h>
-#include "libft.h"
-#include <unistd.h>
-#include <fcntl.h>
-//#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 char *put_line(char *s)
 {
@@ -44,58 +40,92 @@ char *get_remind_me(char *str)
 		count++;
 	if(!str[count] || len == count + 1)
 		return(NULL);
-	result = ft_substr(str, ++count, len - count);
+	count++;
+	result = ft_substr(str, count, len - count);
 	free(str);
 	if (!result || !len)
 		return(free(result), NULL);
 	return(result);
 }
 
-char *get_next_line(int fd)
+char *get_result(char **store)
 {
-	static char	*store = NULL;
-	char		*buffer;
-	char		*line;
-	int		ret;
+	char	*line;
 
-	if (!store)
-		store = ft_strdup("");
-	buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
-	if (!buffer)
-		return (NULL);
-	ret = read(fd, buffer, BUFFER_SIZE);
-	buffer[ret] = 0;
-	while (ret > 0)
+	if (*store && (*store)[0])
 	{
-		line = store;
-		store = ft_strjoin(store, buffer);
-		free(line);
-		if (ft_strchr(buffer, '\n'))
-			break;
-		ret = read(fd, buffer, BUFFER_SIZE);
-		buffer[ret] = 0;
-	}
-	free(buffer);
-	if (store && store[0])
-	{
-		line = put_line(store);
-		store = get_remind_me(store);
+		line = put_line(*store);
+		*store = get_remind_me(*store);
 		return (line);
+	}
+	if (*store && !(*store)[0])
+	{
+		free(*store);
+		*store = NULL;
 	}
 	return (NULL);
 }
 
-int main(int argc, char **argv)
+int	has_newline(char *str)
 {
-	if (argc != 2)
-		return (1);
-	int	fd;
-	char	*result;
-
-	fd = open(argv[1], O_RDONLY);
-	while ((result = get_next_line(fd)))
+	if (!str)
+		return (0);
+	while (*str)
 	{
-		printf("%s", result);
+		if (*str == '\n')
+			return (1);
+		str++;
 	}
 	return (0);
 }
+
+char *get_next_line(int fd)
+{
+	static char	*store[65536];
+	char		*buffer;
+	char		*temp_store;
+	int		ret;
+
+	if (!store[fd])
+		store[fd] = ft_strdup("");
+	buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
+	if (!buffer || fd < 0 || BUFFER_SIZE <= 0 || fd >= MAX_FD)
+		return (free(buffer), NULL);
+	while (1)
+	{
+		ret = read(fd, buffer, BUFFER_SIZE);
+		if (ret <= 0)
+			break ;
+		buffer[ret] = 0;
+		temp_store = store[fd];
+		store[fd] = ft_strjoin(store[fd], buffer);
+		free(temp_store);
+		if (has_newline(buffer))
+			break;
+	}
+	free(buffer);
+	return (get_result(&(store[fd])));
+}
+
+/*
+#include <stdio.h>
+#include <fcntl.h>
+int main(int argc, char **argv)
+{
+	if (argc != 3)
+		return (1);
+	int	fd;
+	int	fd2;
+	int	i;
+	char	*result;
+
+	i = 0;
+	fd = open(argv[1], O_RDONLY);
+	fd2 = open(argv[2], O_RDONLY);
+	while ((result = get_next_line(i % 2 ? fd : fd2)))
+	{
+		i++;
+		printf("%s", result);
+	}
+	return (0);
+}*/
