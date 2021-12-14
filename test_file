@@ -1,5 +1,101 @@
-hello this is a test file
-we have multiple lines
-some are short
-some are veery long lines that have multiple words and multiple characters and some of them
-don't end in a newline
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: omazoz <marvin@42.fr>                      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2021/12/13 18:12:15 by omazoz            #+#    #+#             */
+/*   Updated: 2021/12/13 19:46:22 by omazoz           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include <stdlib.h>
+#include "libft.h"
+#include <unistd.h>
+#include <fcntl.h>
+//#include "get_next_line.h"
+
+char *put_line(char *s)
+{
+	int count;
+	char *result;
+
+	count = 0;
+	if (!s)
+		return (NULL);
+	while(s[count] && s[count] != '\n')
+		count++;
+	result = ft_substr(s,0, count + 1);
+	return(result);
+}
+
+char *get_remind_me(char *str)
+{
+	char *result;
+	int count;
+	int len ;
+
+	count = 0;
+	len = ft_strlen(str);
+	if(!str)
+		return(NULL);
+	while(str[count] && str[count] != '\n')
+		count++;
+	if(!str[count] || len == count + 1)
+		return(NULL);
+	result = ft_substr(str, ++count, len - count);
+	free(str);
+	if (!result || !len)
+		return(free(result), NULL);
+	return(result);
+}
+
+char *get_next_line(int fd)
+{
+	static char	*store = NULL;
+	char		*buffer;
+	char		*line;
+	int		ret;
+
+	if (!store)
+		store = ft_strdup("");
+	buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
+	if (!buffer)
+		return (NULL);
+	ret = read(fd, buffer, BUFFER_SIZE);
+	buffer[ret] = 0;
+	while (ret > 0)
+	{
+		line = store;
+		store = ft_strjoin(store, buffer);
+		free(line);
+		if (ft_strchr(buffer, '\n'))
+			break;
+		ret = read(fd, buffer, BUFFER_SIZE);
+		buffer[ret] = 0;
+	}
+	free(buffer);
+	if (store && store[0])
+	{
+		line = put_line(store);
+		store = get_remind_me(store);
+		return (line);
+	}
+	return (NULL);
+}
+
+int main(int argc, char **argv)
+{
+	if (argc != 2)
+		return (1);
+	int	fd;
+	char	*result;
+
+	fd = open(argv[1], O_RDONLY);
+	while ((result = get_next_line(fd)))
+	{
+		printf("%s", result);
+	}
+	return (0);
+}
