@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: omazoz <marvin@42.fr>                      +#+  +:+       +#+        */
+/*   By: omazoz <omazoz@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/13 18:12:15 by omazoz            #+#    #+#             */
-/*   Updated: 2021/12/13 19:46:22 by omazoz           ###   ########.fr       */
+/*   Updated: 2021/12/15 20:05:37 by omazoz           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,11 +38,17 @@ char *get_remind_me(char *str)
 		return(NULL);
 	while(str[count] && str[count] != '\n')
 		count++;
-	if(!str[count] || len == count + 1)
+	if (!str[count])
+		return (NULL);
+	if(len == count + 1)
 		return(NULL);
 	count++;
 	result = ft_substr(str, count, len - count);
-	free(str);
+	if (ft_strlen(result) == 0)
+	{
+		free(result);
+		return (NULL);
+	}
 	if (!result || !len)
 		return(free(result), NULL);
 	return(result);
@@ -51,11 +57,14 @@ char *get_remind_me(char *str)
 char *get_result(char **store)
 {
 	char	*line;
+	char	*tmp;
 
 	if (*store && (*store)[0])
 	{
 		line = put_line(*store);
+		tmp = *store;
 		*store = get_remind_me(*store);
+		free(tmp);
 		return (line);
 	}
 	if (*store && !(*store)[0])
@@ -83,23 +92,31 @@ char *get_next_line(int fd)
 {
 	static char	*store = NULL;
 	char		*buffer;
-	char		*temp_store;
+	char		*tmp;
 	int		ret;
 
-	if (!store)
-		store = ft_strdup("");
+	
 	buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
 	if (!buffer || fd < 0 || BUFFER_SIZE <= 0)
 		return (free(buffer), NULL);
 	while (1)
 	{
 		ret = read(fd, buffer, BUFFER_SIZE);
-		if (ret <= 0)
+		if (ret == -1)
+		{
+			free(buffer);
+			free(store);
+			return (NULL);
+		}
+		if (ret == 0)
+		{
+			buffer[ret] = 0;
 			break ;
+		}
 		buffer[ret] = 0;
-		temp_store = store;
+		tmp = store;
 		store = ft_strjoin(store, buffer);
-		free(temp_store);
+		free(tmp);
 		if (has_newline(buffer))
 			break;
 	}
@@ -108,19 +125,22 @@ char *get_next_line(int fd)
 }
 
 
-/*#include <stdio.h>
-#include <fcntl.h>
-int main(int argc, char **argv)
-{
-	if (argc != 2)
-		return (1);
-	int	fd;
-	char	*result;
 
-	fd = open(argv[1], O_RDONLY);
-	while ((result = get_next_line(fd)))
-	{
-		printf("%s", result);
-	}
-	return (0);
-}*/
+//#include <stdio.h>
+//#include <fcntl.h>
+//int main(int argc, char **argv)
+//{
+//	if (argc != 2)
+//		return (1);
+//	int	fd;
+//	char	*result;
+//
+//	fd = open(argv[1], O_RDONLY);
+//	while ((result = get_next_line(fd)))
+//	{
+//		printf("%s", result);
+///		free(result);
+//		result = NULL;
+//	}
+//	return (0);
+//}
