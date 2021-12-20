@@ -6,42 +6,42 @@
 /*   By: omazoz <omazoz@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/12/13 18:12:15 by omazoz            #+#    #+#             */
-/*   Updated: 2021/12/15 20:05:37 by omazoz           ###   ########.fr       */
+/*   Updated: 2021/12/20 21:05:34 by omazoz           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-char *put_line(char *s)
+char	*put_line(char *s)
 {
-	int count;
-	char *result;
+	int		count;
+	char	*result;
 
 	count = 0;
 	if (!s)
 		return (NULL);
-	while(s[count] && s[count] != '\n')
+	while (s[count] && s[count] != '\n')
 		count++;
-	result = ft_substr(s,0, count + 1);
-	return(result);
+	result = ft_substr(s, 0, count + 1);
+	return (result);
 }
 
-char *get_remind_me(char *str)
+char	*get_remind_me(char *str)
 {
-	char *result;
-	int count;
-	int len ;
+	char	*result;
+	int		count;
+	int		len;
 
 	count = 0;
 	len = ft_strlen(str);
-	if(!str)
-		return(NULL);
-	while(str[count] && str[count] != '\n')
+	if (!str)
+		return (NULL);
+	while (str[count] && str[count] != '\n')
 		count++;
 	if (!str[count])
 		return (NULL);
-	if(len == count + 1)
-		return(NULL);
+	if (len == count + 1)
+		return (NULL);
 	count++;
 	result = ft_substr(str, count, len - count);
 	if (ft_strlen(result) == 0)
@@ -50,11 +50,11 @@ char *get_remind_me(char *str)
 		return (NULL);
 	}
 	if (!result || !len)
-		return(free(result), NULL);
-	return(result);
+		return (free(result), NULL);
+	return (result);
 }
 
-char *get_result(char **store)
+char	*get_result(char **store)
 {
 	char	*line;
 	char	*tmp;
@@ -88,14 +88,13 @@ int	has_newline(char *str)
 	return (0);
 }
 
-char *get_next_line(int fd)
+char	*get_next_line(int fd)
 {
 	static char	*store = NULL;
 	char		*buffer;
 	char		*tmp;
-	int		ret;
+	int			ret;
 
-	
 	buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
 	if (!buffer || fd < 0 || BUFFER_SIZE <= 0)
 		return (free(buffer), NULL);
@@ -103,44 +102,34 @@ char *get_next_line(int fd)
 	{
 		ret = read(fd, buffer, BUFFER_SIZE);
 		if (ret == -1)
-		{
-			free(buffer);
-			free(store);
-			return (NULL);
-		}
+			return (free(buffer), NULL);
 		if (ret == 0)
-		{
-			buffer[ret] = 0;
 			break ;
-		}
 		buffer[ret] = 0;
 		tmp = store;
 		store = ft_strjoin(store, buffer);
 		free(tmp);
 		if (has_newline(buffer))
-			break;
+			break ;
 	}
 	free(buffer);
 	return (get_result(&store));
 }
 
+/*
+#include <stdio.h>
+#include <fcntl.h>
+int main(int argc, char **argv)
+{
+	if (argc != 2)
+		return (1);
+	int	fd;
+	int	i;
+	char	*result;
 
-
-//#include <stdio.h>
-//#include <fcntl.h>
-//int main(int argc, char **argv)
-//{
-//	if (argc != 2)
-//		return (1);
-//	int	fd;
-//	char	*result;
-//
-//	fd = open(argv[1], O_RDONLY);
-//	while ((result = get_next_line(fd)))
-//	{
-//		printf("%s", result);
-///		free(result);
-//		result = NULL;
-//	}
-//	return (0);
-//}
+	fd = open(argv[1], O_RDWR);
+	result = get_next_line(fd);
+	printf("%s\n", result);
+	return (0);
+}
+*/
